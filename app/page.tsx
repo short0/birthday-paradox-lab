@@ -19,6 +19,7 @@ export default function BirthdayParadoxLab() {
     toggleTheme,
     loadPreset,
     setLabState,
+    setLabStateLive,
     undo,
     redo,
     resetToHome,
@@ -66,6 +67,7 @@ export default function BirthdayParadoxLab() {
           activePreset={activePreset}
           computed={computed}
           onStateChange={setLabState}
+          onStateLiveChange={setLabStateLive}
         />
       )}
     </div>

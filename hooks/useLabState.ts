@@ -129,27 +129,49 @@ export function useLabState() {
     saveToStorage('bpl_history_index', historyIndex)
   }, [labState, history, historyIndex, initialized])
 
-  const pushHistory = useCallback(
-    (newState: LabState) => {
-      setHistory((prev) => {
-        const truncated = prev.slice(0, historyIndex + 1)
-        const next = [...truncated, newState].slice(-MAX_HISTORY)
-        return next
-      })
-      setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY - 1))
+  // historyIndexRef keeps pushHistory's closure in sync without causing re-renders
+  const historyIndexRef = useRef(0)
+  useEffect(() => {
+    historyIndexRef.current = historyIndex
+  }, [historyIndex])
+
+  const pushHistory = useCallback((newState: LabState) => {
+    const currentIndex = historyIndexRef.current
+    setHistory((prev) => {
+      const truncated = prev.slice(0, currentIndex + 1)
+      return [...truncated, newState].slice(-MAX_HISTORY)
+    })
+    const nextIndex = Math.min(currentIndex + 1, MAX_HISTORY - 1)
+    setHistoryIndex(nextIndex)
+    historyIndexRef.current = nextIndex
+  }, [])
+
+  // labStateRef gives synchronous read access to current labState
+  const labStateRef = useRef(labState)
+  useEffect(() => {
+    labStateRef.current = labState
+  }, [labState])
+
+  // setLabState: update state AND push to history (use for discrete committed changes)
+  const setLabState = useCallback(
+    (updater: LabState | ((prev: LabState) => LabState)) => {
+      const next =
+        typeof updater === 'function' ? updater(labStateRef.current) : updater
+      setLabStateInternal(next)
+      pushHistory(next)
     },
-    [historyIndex]
+    [pushHistory]
   )
 
-  const setLabState = useCallback(
+  // setLabStateLive: update state WITHOUT pushing to history (use during drag)
+  const setLabStateLive = useCallback(
     (updater: LabState | ((prev: LabState) => LabState)) => {
       setLabStateInternal((prev) => {
         const next = typeof updater === 'function' ? updater(prev) : updater
-        pushHistory(next)
         return next
       })
     },
-    [pushHistory]
+    []
   )
 
   const setScreen = useCallback((s: Screen) => {
@@ -215,6 +237,7 @@ export function useLabState() {
     toggleTheme,
     loadPreset,
     setLabState,
+    setLabStateLive,
     undo,
     redo,
     resetToHome,

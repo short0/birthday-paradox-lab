@@ -14,6 +14,7 @@ interface LabLeftPanelProps {
   labState: LabState
   activePreset: Preset
   onStateChange: (updater: LabState | ((prev: LabState) => LabState)) => void
+  onStateLiveChange: (updater: LabState | ((prev: LabState) => LabState)) => void
 }
 
 const PRESET_SHORT_NAMES: Record<string, string> = {
@@ -24,7 +25,7 @@ const PRESET_SHORT_NAMES: Record<string, string> = {
   'uuid-risk': 'UUID v4',
 }
 
-export function LabLeftPanel({ labState, activePreset, onStateChange }: LabLeftPanelProps) {
+export function LabLeftPanel({ labState, activePreset, onStateChange, onStateLiveChange }: LabLeftPanelProps) {
   const maxSample = Math.min(activePreset.spaceSize, activePreset.sampleSize * 10, 1e9)
 
   function handlePresetSelect(id: string) {
@@ -37,7 +38,13 @@ export function LabLeftPanel({ labState, activePreset, onStateChange }: LabLeftP
     }))
   }
 
-  function handleSampleChange(value: number[]) {
+  // During drag: update the displayed value live without pushing to history
+  function handleSampleDrag(value: number[]) {
+    onStateLiveChange((prev) => ({ ...prev, sampleSize: value[0] }))
+  }
+
+  // On mouse-up / keyboard commit: push to history
+  function handleSampleCommit(value: number[]) {
     onStateChange((prev) => ({ ...prev, sampleSize: value[0] }))
   }
 
@@ -112,7 +119,8 @@ export function LabLeftPanel({ labState, activePreset, onStateChange }: LabLeftP
           max={maxSample}
           step={Math.max(1, Math.floor(maxSample / 200))}
           value={[labState.sampleSize]}
-          onValueChange={handleSampleChange}
+          onValueChange={handleSampleDrag}
+          onValueCommit={handleSampleCommit}
           aria-label="Sample size"
           className="mb-2"
         />
