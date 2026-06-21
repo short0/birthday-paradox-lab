@@ -15,11 +15,12 @@ interface LabScreenProps {
   activePreset: Preset
   computed: ComputedResult
   onStateChange: (updater: LabState | ((prev: LabState) => LabState)) => void
+  onStateLiveChange: (updater: LabState | ((prev: LabState) => LabState)) => void
 }
 
 type MobileTab = 'controls' | 'viz' | 'outputs'
 
-export function LabScreen({ labState, activePreset, computed, onStateChange }: LabScreenProps) {
+export function LabScreen({ labState, activePreset, computed, onStateChange, onStateLiveChange }: LabScreenProps) {
   const [mobileTab, setMobileTab] = useState<MobileTab>('viz')
   const [leftOpen, setLeftOpen] = useState(true)
   const [rightOpen, setRightOpen] = useState(true)
@@ -41,6 +42,7 @@ export function LabScreen({ labState, activePreset, computed, onStateChange }: L
               labState={labState}
               activePreset={activePreset}
               onStateChange={onStateChange}
+              onStateLiveChange={onStateLiveChange}
             />
           )}
         </div>
@@ -98,6 +100,7 @@ export function LabScreen({ labState, activePreset, computed, onStateChange }: L
             labState={labState}
             activePreset={activePreset}
             onStateChange={onStateChange}
+            onStateLiveChange={onStateLiveChange}
           />
         </div>
         {/* Right: center + outputs stacked */}
@@ -154,6 +157,7 @@ export function LabScreen({ labState, activePreset, computed, onStateChange }: L
               labState={labState}
               activePreset={activePreset}
               onStateChange={onStateChange}
+              onStateLiveChange={onStateLiveChange}
             />
           )}
           {mobileTab === 'viz' && (
